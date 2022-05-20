@@ -23,6 +23,7 @@
 
 
 import math
+from typing import Set
 
 
 class Point:
@@ -51,9 +52,9 @@ class Line:
         return '%sx + %sy + %s = 0' % (self.a, self.b, self.c)
     def __repr__(self):
         return '%sx + %sy + %s = 0' % (self.a, self.b, self.c)
-    def compute(self, x, y):
-        return self.a * x + self.b*y + self.c
-    def buildByPointAndSlope(self, point, slope):
+    def compute(self, point): # 计算点落在线哪一边
+        return self.a * point.x + self.b*point.y + self.c
+    def buildByPointAndSlope(self, point, slope): # 通过点与斜率构建
         if slope == None: # 表示斜率无穷大
             self.a = 1
             self.b = 0
@@ -73,6 +74,11 @@ class Flat:
     
     def getDivision(self):
         pointsLen = len(self.points)
+        if pointsLen < 2:
+                A = set(self.points)
+                B = set()
+                return { "A": A, "B": B }
+
         distanceMatrix = [
             [0 for j in range(pointsLen)]
             for i in range(pointsLen)
@@ -80,9 +86,21 @@ class Flat:
         maxDistance = -1
         maxDistancePair = None
                      
-        def getPerpendicularBisector(maxDistancePair):
-            midPoint = (maxDistancePair[0] + maxDistancePair[1])/2
-            print(midPoint)
+        # 获取中垂线
+        def getPerpendicularBisector(pointPair):
+            midPoint = (pointPair[0] + pointPair[1])/2
+            subX =  pointPair[1].x-pointPair[0].x
+            subY = pointPair[1].y-pointPair[0].y
+            slope = None
+            if subX == 0:
+                slope = 0
+            elif subY == 0:
+                slope = None
+            else:
+                slope = -subX/subY
+            line = Line()
+            line.buildByPointAndSlope(midPoint, slope)
+            return line
 
         for i in range(pointsLen):
             for j in range(i+1, pointsLen):
@@ -90,9 +108,59 @@ class Flat:
                 if distanceMatrix[i][j] > maxDistance:
                     maxDistance = distanceMatrix[i][j]
                     maxDistancePair = (self.points[i], self.points[j])
-                    getPerpendicularBisector(maxDistancePair)
-       
+        
+        l = getPerpendicularBisector(maxDistancePair)
+        A = set()
+        B = set()
+        for point in self.points:
+            if l.compute(point) == 0:
+                A = set(self.points)
+                B = set()
+                return { "A": A, "B": B }
+            elif l.compute(point) < 0:
+                A.add(point)
+            else:
+                B.add(point)
+        
+        for pa in A:
+            for pb in B:
+                l_ab = getPerpendicularBisector((pa,pb))
+                for a in A:
+                    if l_ab.compute(a) >= 0:
+                        A = set(self.points)
+                        B = set()
+                        return { "A": A, "B": B }
+                for b in B:
+                    if l_ab.compute(b) <= 0:
+                        A = set(self.points)
+                        B = set()
+                        return { "A": A, "B": B }
+        
+        return { "A": A, "B": B }
 
 
-flat = Flat([(0,0),(4,4),(1,1),(2,2)])
-flat.getDivision()
+def test1():
+    flat = Flat([(-9,0),(9,0),(-1,2),(1,-2)])
+    print(flat.getDivision())
+
+def test2():
+    flat = Flat([(0,0),(1,1),(2,2)])
+    print(flat.getDivision())
+
+def test3():
+    flat = Flat([(-3,0),(3,0),(-1,2),(1,-2)])
+    print(flat.getDivision())
+
+def test4():
+    flat = Flat([(-1,0),(1,0)])
+    print(flat.getDivision())
+
+def test5():
+    flat = Flat([(-1,0)])
+    print(flat.getDivision())
+
+test1()
+test2()
+test3()
+test4()
+test5()
