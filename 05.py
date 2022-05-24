@@ -8,6 +8,16 @@
 # 这一一道典型的树形dp问题
 # 采用dfs + dp， 复杂度为O(n), n为节点个数
 
+# 设dp（i）表示以i为根的树所拥有的最大独立集。
+# dp（i，0）表示以i为根节点，并且i不在集合内部的最大独立集，
+# 如果i不在集合内部，那么他的子节点一定在或不在集合内部。
+# 所以dp（i，0）=∑max(dp（i的子节点，1）,dp（i的子节点，0））；
+# dp（i，1）表示以i为根节点，并且i在集合内部的最大独立集，那么，以i为根的子节点一定不在集合内部。
+# 所以dp（i，1）=∑dp（i的子节点，0）。
+# 所以dp（i，1/0）=max（∑max(dp（i的子节点，1）,dp（i的子节点，0）），∑dp（i的子节点，0））；
+
+
+
 class TreeNode: 
     def __init__(self, key:str, weight:int, children: list) -> None:
         self.key = key
